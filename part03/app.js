@@ -1,6 +1,6 @@
 /** AJAX */
 const ajax = new XMLHttpRequest();
-
+    
 /** URL */
 const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
 // @id => 마킹!
@@ -10,6 +10,7 @@ const CONTENTS_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 const container = document.getElementById('root');
 const store = {
     currentPage: 1,
+    feeds: [],
 }
 
 /** 함수 */
@@ -21,14 +22,28 @@ function getDataFnc(URL) {
 
     return JSON.parse(ajax.response);
 }
+// read 데이터 추가 함수
+function makeFeeds(feeds) {
+    for (let i = 0; i < feeds.length; i++) {
+        feeds[i].read = false;
+    }
+
+    return feeds;
+}
 // 뉴스 피드 출력 함수
 function newsFeedFnc() {
     // 뉴스 목록 가져오기
-    const newsFeed = getDataFnc(NEWS_URL);
+    let newsFeed = store.feeds;
     // 한 페이지 당 뉴스 목록
     const PAGE_ELS = 10;
     // 마지막 뉴스 목록 페이지 수
     const lastNewsFeed = newsFeed.length / PAGE_ELS;
+
+    // 최소 실행
+    if (newsFeed.length === 0) {
+        newsFeed = store.feeds = makeFeeds(getDataFnc(NEWS_URL));
+    }
+
     // 템플릿
     let template = `
         <div class="bg-gray-600 min-h-screen">
@@ -126,6 +141,15 @@ function newsDetailFnc() {
         </div>
     `
 
+    // 읽음 표시 
+    for (let i = 0; i < store.feeds.length; i++) {
+        if (store.feeds[i].id === Number(id)) {
+            store.feeds[i].read = true;
+            break;
+        }
+    }
+
+    // 댓글 출력
     function makeComment(comments, called = 0) {
         const commentString = [];
     
@@ -140,6 +164,7 @@ function newsDetailFnc() {
             </div>      
           `);
             
+          // 대댓글
           if (comments[i].comments.length > 0) {
             // 재귀호출
             commentString.push(makeComment(comments[i].comments, called + 1));
