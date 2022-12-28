@@ -31,7 +31,7 @@ function newsFeedFnc() {
     const lastNewsFeed = newsFeed.length / PAGE_ELS;
     // 템플릿
     let template = `
-        <div>
+        <div class="container mx-auto p-4">
             <h1>Hackers News</h1>
             <ul>
                 {{__news_feed__}}
