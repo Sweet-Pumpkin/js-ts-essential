@@ -125,3 +125,41 @@ newsList.push(`
     </div>
 `);
 ```
+
+#### 5. 템플릿
+```
+let template = `
+    <div>
+        <h1>Hackers News</h1>
+        <ul>
+            {{__news_feed__}}
+        </ul>
+        <div>
+            <a href="#/page/{{__prev_page__}}">이전 페이지</a>
+            <a href="#/page/{{__next_page__}}">다음 페이지</a>
+        </div>
+    </div>
+`
+
+// 템플릿 내용 대체
+// 뉴스 콘텐츠
+template = template.replace('{{__news_feed__}}', newsList.join(''));
+// 이전 페이지
+template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
+// 다음 페이지
+template = template.replace('{{__next_page__}}', store.currentPage < lastNewsFeed ? store.currentPage + 1 : lastNewsFeed);
+// 출력
+container.innerHTML = template;
+```
+
+### 4. tailwind
+#### 1. tailwind cdn
+```
+<script src="https://cdn.tailwindcss.com"></script>
+```
+
+### 5. fontawesome
+[cdnjs](https://cdnjs.com/)
+```
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+```
