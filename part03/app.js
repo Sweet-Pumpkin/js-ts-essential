@@ -55,7 +55,7 @@ function newsFeedFnc() {
 // 뉴스 콘텐츠 출력 함수
 function newsDetailFnc() {
     // 콘텐츠 아이디 추출 
-    // '#1234'로 출력됨 => '#' 제거(substring)
+    // '#/page/1234' or '#/show/1234'로 출력됨 => '#/page' 제거(substring)
     const id = location.hash.substring(7);
     // url의 마킹 '@id'를 replace() 메서드를 이용해 'id'로 변경
     const newsContent = getDataFnc(CONTENTS_URL.replace('@id', id));
