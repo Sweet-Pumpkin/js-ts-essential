@@ -34,15 +34,16 @@ function makeFeeds(feeds) {
 function newsFeedFnc() {
     // 뉴스 목록 가져오기
     let newsFeed = store.feeds;
-    // 한 페이지 당 뉴스 목록
-    const PAGE_ELS = 10;
-    // 마지막 뉴스 목록 페이지 수
-    const lastNewsFeed = newsFeed.length / PAGE_ELS;
 
     // 최소 실행
     if (newsFeed.length === 0) {
         newsFeed = store.feeds = makeFeeds(getDataFnc(NEWS_URL));
     }
+
+    // 한 페이지 당 뉴스 목록
+    const PAGE_ELS = 10;
+    // 마지막 뉴스 목록 페이지 수
+    const lastNewsFeed = newsFeed.length / PAGE_ELS;
 
     // 템플릿
     let template = `
