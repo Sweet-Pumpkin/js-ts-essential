@@ -29,9 +29,21 @@ function newsFeedFnc() {
     const PAGE_ELS = 10;
     // 마지막 뉴스 목록 페이지 수
     const lastNewsFeed = newsFeed.length / PAGE_ELS;
+    // 템플릿
+    let template = `
+        <div>
+            <h1>Hackers News</h1>
+            <ul>
+                {{__news_feed__}}
+            </ul>
+            <div>
+                <a href="#/page/{{__prev_page__}}">이전 페이지</a>
+                <a href="#/page/{{__next_page__}}">다음 페이지</a>
+            </div>
+        </div>
+    `
     // 뉴스 목록
     const newsList = [];
-    newsList.push('<ul>');
     for (let i = (store.currentPage - 1) * PAGE_ELS; i < store.currentPage * PAGE_ELS; i++) {
         newsList.push(`
             <li>
@@ -41,16 +53,16 @@ function newsFeedFnc() {
             </li>
         `);
     }
-    newsList.push('</ul>');
-    // 네비게이션
-    newsList.push(`
-        <div>
-            <a href="#/page/${store.currentPage > 1 ? store.currentPage - 1 : 1}">이전 페이지</a>
-            <a href="#/page/${store.currentPage <  lastNewsFeed ? store.currentPage + 1 : lastNewsFeed}">다음 페이지</a>
-        </div>
-    `);
+
+    // 템플릿 내용 대체
+    // 뉴스 콘텐츠
+    template = template.replace('{{__news_feed__}}', newsList.join(''));
+    // 이전 페이지
+    template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
+    // 다음 페이지
+    template = template.replace('{{__next_page__}}', store.currentPage < lastNewsFeed ? store.currentPage + 1 : lastNewsFeed);
     // 출력
-    container.innerHTML = newsList.join('');
+    container.innerHTML = template;
 }
 // 뉴스 콘텐츠 출력 함수
 function newsDetailFnc() {
