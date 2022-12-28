@@ -163,3 +163,40 @@ container.innerHTML = template;
 ```
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 ```
+
+### 6. 읽음 표시
+```
+const store = {
+    feeds: [],
+}
+
+// read 데이터 추가 함수
+function makeFeeds(feeds) {
+    for (let i = 0; i < feeds.length; i++) {
+        feeds[i].read = false;
+    }
+
+    return feeds;
+}
+
+function newsFeedFnc() {
+    // 뉴스 목록 가져오기
+    let newsFeed = store.feeds;
+    // 최소 실행
+    if (newsFeed.length === 0) {
+        newsFeed = store.feeds = makeFeeds(getDataFnc(NEWS_URL));
+    }
+}
+
+function newsDetailFnc() {
+    const id = location.hash.substring(7);
+    
+    // 읽음 표시 
+    for (let i = 0; i < store.feeds.length; i++) {
+        if (store.feeds[i].id === Number(id)) {
+            store.feeds[i].read = true;
+            break;
+        }
+    }
+}
+```
