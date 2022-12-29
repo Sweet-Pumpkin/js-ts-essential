@@ -1,0 +1,19 @@
+## Hacker News Client App with TypeScript
+
+### 1. 시작하기
+#### 1. js파일 ts로 변경
+#### 2. tsconfig.json 파일 생성
+```
+{
+    "compilerOptions": {
+        "strict": true, // typescript 기능을 얼마나 엄격하게 할 것인지
+        "target": "ES5", // 컴파일 된 파일의 문법 체계 설정
+        "module": "CommonJS", // 컴파일 된 파일의 문법 체계 설정
+        "alwaysStrict": true,
+        "noImplicitAny": true, // any 타입을 쓰지 못 하도록
+        "noImplicitThis": true,
+        "sourceMap": true, // /dist의 .map 파일을 생성하도록
+        "downlevelIteration": true,
+    }
+}
+```
