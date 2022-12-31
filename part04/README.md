@@ -70,3 +70,31 @@ function newsDetailFnc() {
 ```
 #### 4. 함수의 리턴 값이 없을때
 - `void`를 쓴다
+
+#### 5. 인터페이스
+- type alias는 `=`를 사용
+- type interface는 `=` 사용하지 않음
+```
+type Store = {
+
+}
+
+interface Store {
+
+}
+```
+- type alias는 `&`
+- type interface는 `extends` 사용
+```
+type NewsDetail = News & {
+    comments: NewsComment[];
+}
+
+interface NewsDetail extends News {
+    comments: NewsComment[];
+}
+```
+
+#### 5. readonly
+- 타입에 대한 설명 중 하나
+- readonly를 지정하면 값을 바꾸지 못함.
