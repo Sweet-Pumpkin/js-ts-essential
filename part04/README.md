@@ -98,3 +98,103 @@ interface NewsDetail extends News {
 #### 5. readonly
 - 타입에 대한 설명 중 하나
 - readonly를 지정하면 값을 바꾸지 못함.
+
+#### 6. class
+- class는 최초 초기화 과정이 필요
+- constructor(생성자)로 초기화
+```
+class Api {
+    url: string;
+    ajax: XMLHttpRequest;
+
+    constructor(url: string) {
+        this.url= url;
+        this.ajax = new XMLHttpRequest();
+    }
+
+    // protected => 지시어를 외부에 노출 x
+    protected getRequest<AjaxResponse>(): AjaxResponse {
+        this.ajax.open('GET', this.url, false);
+        this.ajax.send();
+
+        return JSON.parse(this.ajax.response);
+    }
+}
+
+class NewsFeedApi extends Api {
+    getData(): NewsFeed[] {
+        return this.getRequest<NewsFeed[]>();
+    }
+}
+
+class NewsDetailApi extends Api {
+    getData(): NewsDetail {
+        return this.getRequest<NewsDetail>();
+    }
+}
+
+function newsFeedFnc(): void {
+    const api = new NewsFeedApi(NEWS_URL);
+
+    if (newsFeed.length === 0) {
+        newsFeed = store.feeds = makeFeeds(api.getData());
+    }
+}
+
+function newsDetailFnc(): void {
+    const id = location.hash.substring(7);
+    const api = new NewsDetailApi(CONTENTS_URL.replace('@id', id));
+    const newsContent = api.getData();
+}
+```
+
+#### 7. mixin
+- `class`의 `extends` 기능을 이용하지 않고 단독 객체처럼 사용
+- 필요할 경우 `class`를 합성해서 확장해 사용
+- 기존 `class`는 다수의 `extends` 불가하나, `mixin` 기법은 가능
+```
+/** MIXIN FNC */
+// typescript 공식 문서 참조
+function applyApiMixins(targetClass: any, baseClasses: any[]): void {
+    baseClasses.forEach(baseClass => {
+        Object.getOwnPropertyNames(baseClass.prototype).forEach(name => {
+            const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
+            
+            if (descriptor) {
+                Object.defineProperty(targetClass, name, descriptor);
+            }
+        });
+    })
+}
+
+/** CLASS */
+class Api {
+    getRequest<AjaxResponse>(url: string): AjaxResponse {
+        const ajax = new XMLHttpRequest();
+        ajax.open('GET', url, false);
+        ajax.send();
+
+        return JSON.parse(ajax.response);
+    }
+}
+
+class NewsFeedApi {
+    getData(): NewsFeed[] {
+        return this.getRequest<NewsFeed[]>(NEWS_URL);
+    }
+}
+
+class NewsDetailApi {
+    getData(id: string): NewsDetail {
+        return this.getRequest<NewsDetail>(CONTENTS_URL.replace('@id', id));
+    }
+}
+
+// 합성될 class를 typescript 컴파일러에 알려주기
+interface NewsFeedApi extends Api {};
+interface NewsDetailApi extends Api {};
+
+// Mixin 실행
+applyApiMixins(NewsFeedApi, [Api]);
+applyApiMixins(NewsDetailApi, [Api]);
+```
