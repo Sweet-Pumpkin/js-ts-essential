@@ -24,6 +24,52 @@ interface NewsDetail extends News {
     readonly comments: NewsComment[];
 }
 
+/** MIXIN FNC */
+// typescript 공식 문서 참조
+function applyApiMixins(targetClass: any, baseClasses: any[]): void {
+    baseClasses.forEach(baseClass => {
+        Object.getOwnPropertyNames(baseClass.prototype).forEach(name => {
+            const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
+            
+            if (descriptor) {
+                Object.defineProperty(targetClass, name, descriptor);
+            }
+        });
+    })
+}
+
+/** CLASS */
+class Api {
+    getRequest<AjaxResponse>(url: string): AjaxResponse {
+        const ajax = new XMLHttpRequest();
+        ajax.open('GET', url, false);
+        ajax.send();
+
+        return JSON.parse(ajax.response);
+    }
+}
+
+class NewsFeedApi extends Api {
+    getData(): NewsFeed[] {
+        return this.getRequest<NewsFeed[]>(NEWS_URL);
+    }
+}
+
+class NewsDetailApi extends Api {
+    getData(id: string): NewsDetail {
+        return this.getRequest<NewsDetail>(CONTENTS_URL.replace('@id', id));
+    }
+}
+
+// 합성될 class를 typescript 컴파일러에 알려주기
+// interface NewsFeedApi extends Api {};
+// interface NewsDetailApi extends Api {};
+
+// Mixin 실행
+applyApiMixins(NewsFeedApi, [Api]);
+applyApiMixins(NewsDetailApi, [Api]);
+
+
 /** AJAX */
 const ajax: XMLHttpRequest = new XMLHttpRequest();
     
@@ -40,14 +86,6 @@ const store: Store = {
 }
 
 /** 함수 */
-// Hacker News API 가져오는 함수
-function getDataFnc<AjaxResponse>(url: string): AjaxResponse {
-    // open(1, 2, 3); => 1: string, 2: url, 3: boolean(비동기 or 동기 처리 유무)
-    ajax.open('GET', url, false);
-    ajax.send();
-
-    return JSON.parse(ajax.response);
-}
 // read 데이터 추가 함수
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
     for (let i = 0; i < feeds.length; i++) {
@@ -67,12 +105,13 @@ function updateView(html: string): void {
 
 // 뉴스 피드 출력 함수
 function newsFeedFnc(): void {
+    const api = new NewsFeedApi();
     // 뉴스 목록 가져오기
     let newsFeed: NewsFeed[] = store.feeds;
 
     // 최소 실행
     if (newsFeed.length === 0) {
-        newsFeed = store.feeds = makeFeeds(getDataFnc<NewsFeed[]>(NEWS_URL));
+        newsFeed = store.feeds = makeFeeds(api.getData());
     }
 
     // 한 페이지 당 뉴스 목록
@@ -145,7 +184,8 @@ function newsDetailFnc(): void {
     // '#/page/1234' or '#/show/1234'로 출력됨 => '#/page' 제거(substring)
     const id = location.hash.substring(7);
     // url의 마킹 '@id'를 replace() 메서드를 이용해 'id'로 변경
-    const newsContent = getDataFnc<NewsDetail>(CONTENTS_URL.replace('@id', id));
+    const api = new NewsDetailApi();
+    const newsContent = api.getData(id);
 
     // 템플릿
     let template = `
