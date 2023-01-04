@@ -17,7 +17,7 @@
     }
 }
 ```
-## 2. 타입 작성
+## 2. TypeScript Migration
 #### 1. rest client
 - vscode extension 
 - api 호출을 에디터 상에서 볼 수 있게 해줌
@@ -197,4 +197,15 @@ interface NewsDetailApi extends Api {};
 // Mixin 실행
 applyApiMixins(NewsFeedApi, [Api]);
 applyApiMixins(NewsDetailApi, [Api]);
+```
+#### 8. View class
+- 상위 클래스의 인자를 하위 클래스에서 사용할때 `super()`를 사용해야 함.
+```
+class View {
+    containerId: string;
+}
+
+class NewsFeedView {
+    super(containerId);
+}
 ```
