@@ -209,3 +209,14 @@ class NewsFeedView {
     super(containerId);
 }
 ```
+- 하위 클래스에게 메서드를 강제하기 위한 마킹을 추상 메서드(abstract)라고 한다.
+- 자식 메서드는 반드시 부모가 강제한 추상 메서드를 반드시 구현해야함.
+```
+abstract class View {
+    abstract render();
+}
+
+class child {
+    render();
+}
+```
