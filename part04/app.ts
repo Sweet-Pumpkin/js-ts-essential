@@ -184,11 +184,11 @@ class Router {
             this.defaultRoute.page.render();
         }
 
-        for(const routeInfo of this.routeTable) {
+        for (const routeInfo of this.routeTable) {
             if (routePath.indexOf(routeInfo.path) >= 0) {
                 routeInfo.page.render();
                 break;
-              }
+            }
         }
     }
 }
@@ -384,6 +384,6 @@ const newsDetailView = new NewsDetailView('root');
 
 router.setDefaultPage(newsFeedView);
 router.addRoutePath('/page/', newsFeedView);
-router.addRoutePath('/show/', newsFeedView);
+router.addRoutePath('/show/', newsDetailView);
 
 router.route();
