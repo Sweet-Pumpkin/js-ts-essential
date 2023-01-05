@@ -99,10 +99,10 @@ applyApiMixins(NewsDetailApi, [Api]);
 // 공통 클래스
 abstract class View {
     // 선언
-    template: string;
-    renderTemplate: string;
-    container: HTMLElement;
-    htmlList: string[];
+    private template: string;
+    private renderTemplate: string;
+    private container: HTMLElement;
+    private htmlList: string[];
 
     // 생성
     constructor(containerId: string, template: string) {
@@ -120,30 +120,30 @@ abstract class View {
     }
 
     // TypeScript 문법 상 null container가 null 값이 아닐 경우 설정
-    updateView(): void {
+    protected updateView(): void {
         this.container.innerHTML = this.renderTemplate;
         this.renderTemplate = this.template;
     } 
 
     // pushing HTML elements
-    addHTML(htmlString: string): void {
+    protected addHTML(htmlString: string): void {
         this.htmlList.push(htmlString);
     }
 
     // joining HTML elements
-    getHTML(): string {
+    protected getHTML(): string {
         const snapshot = this.htmlList.join('');
         this.clearHTMLList();
         return snapshot;
     }
 
     // replacing template data
-    setTemplateData(key: string, value: string): void {
+    protected setTemplateData(key: string, value: string): void {
         this.renderTemplate = this.renderTemplate.replace(`{{__${key}__}}`, value);
     }  
 
     // clearing HTML elements
-    clearHTMLList(): void {
+    private clearHTMLList(): void {
         this.htmlList = [];
     }
 
@@ -196,8 +196,8 @@ class Router {
 // 뉴스 피드 출력 클래스
 class NewsFeedView extends View {
     // 선언
-    api: NewsFeedApi;
-    feeds: NewsFeed[];
+    private api: NewsFeedApi;
+    private feeds: NewsFeed[];
 
     // 생성
     constructor(containerId: string) {
@@ -245,12 +245,12 @@ class NewsFeedView extends View {
         const PAGE_ELS = 10;
         // 마지막 뉴스 목록 페이지 수
         const lastNewsFeed = this.feeds.length / PAGE_ELS;
-        
+        store.currentPage = Number(location.hash.substring(7) || 1);
         for (let i = (store.currentPage - 1) * PAGE_ELS; i < store.currentPage * PAGE_ELS; i++) {
             const { id, title, comments_count, user, points, time_ago, read } = this.feeds[i]
             this.addHTML(`
                 <div class="p-6 ${read ? 'bg-red-500' : 'bg-white'} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
-                    <div class="flex">
+                    <div class="xflex">
                         <div class="flex-auto">
                             <a href="#/show/${id}">${title}</a>  
                         </div>
@@ -281,7 +281,7 @@ class NewsFeedView extends View {
     }
 
     // read 데이터 추가
-    makeFeeds(): void {
+    private makeFeeds(): void {
         for (let i = 0; i < this.feeds.length; i++) {
             this.feeds[i].read = false;
         }
