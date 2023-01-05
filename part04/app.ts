@@ -23,6 +23,10 @@ interface NewsComment extends News {
 interface NewsDetail extends News {
     readonly comments: NewsComment[];
 }
+interface RouteInfo {
+    path: string;
+    page: View;
+}
 
 /** AJAX */
 const ajax: XMLHttpRequest = new XMLHttpRequest();
@@ -78,8 +82,8 @@ class NewsFeedApi extends Api {
 }
 
 class NewsDetailApi extends Api {
-    getData(id: string): NewsDetail {
-        return this.getRequest<NewsDetail>(CONTENTS_URL.replace('@id', id));
+    getData(): NewsDetail {
+        return this.getRequest<NewsDetail>();
     }
 }
 
@@ -93,9 +97,10 @@ applyApiMixins(NewsDetailApi, [Api]);
 
 /** View class */
 // 공통 클래스
-class View {
+abstract class View {
     // 선언
     template: string;
+    renderTemplate: string;
     container: HTMLElement;
     htmlList: string[];
 
@@ -111,11 +116,13 @@ class View {
         this.container = containerEl;
         this.template = template;
         this.htmlList = [];
+        this.renderTemplate = template;
     }
 
     // TypeScript 문법 상 null container가 null 값이 아닐 경우 설정
-    updateView(html: string): void {
-        this.container.innerHTML = html;
+    updateView(): void {
+        this.container.innerHTML = this.renderTemplate;
+        this.renderTemplate = this.template;
     } 
 
     // pushing HTML elements
@@ -125,13 +132,65 @@ class View {
 
     // joining HTML elements
     getHTML(): string {
-        return this.htmlList.join('');
+        const snapshot = this.htmlList.join('');
+        this.clearHTMLList();
+        return snapshot;
     }
 
     // replacing template data
     setTemplateData(key: string, value: string): void {
-        this.template = this.template.replace(`{{__${key}__}}`, value);
+        this.renderTemplate = this.renderTemplate.replace(`{{__${key}__}}`, value);
     }  
+
+    // clearing HTML elements
+    clearHTMLList(): void {
+        this.htmlList = [];
+    }
+
+    // 추상 메서드 하위 클래스에게 강제 시키기 위해 마킹하는 것
+    abstract render(): void; 
+}
+// router
+class Router {
+    routeTable: RouteInfo[];
+    defaultRoute: RouteInfo | null;
+
+    constructor() {
+        /** ADD EVENT */
+        // hashchange: a.href에 입력한 주소가 바뀔때마다 이벤트 실행
+        window.addEventListener('hashchange', this.route.bind(this));
+        
+        this.defaultRoute = null;
+        this.routeTable = [];
+    }
+
+    // 초기 페이지
+    setDefaultPage(page: View): void {
+        this.defaultRoute = {path: '', page};
+    }
+
+    // 페이지 path 입력 
+    addRoutePath(path: string, page: View): void {
+        this.routeTable.push({
+            path,
+            page,
+        })
+    }
+
+    route() {
+        const routePath = location.hash;
+
+        if (routePath === '' && this.defaultRoute) {
+            this.defaultRoute.page.render();
+        }
+
+        for(const routeInfo of this.routeTable) {
+            if (routePath.indexOf(routeInfo.path) >= 0) {
+                routeInfo.page.render();
+                break;
+              }
+        }
+    }
 }
 
 // 뉴스 피드 출력 클래스
@@ -218,7 +277,7 @@ class NewsFeedView extends View {
         // 다음 페이지
         this.setTemplateData('next_page', String(store.currentPage < lastNewsFeed ? store.currentPage + 1 : lastNewsFeed));
         // 출력
-        updateView(template);
+        this.updateView();
     }
 
     // read 데이터 추가
@@ -242,7 +301,7 @@ class NewsDetailView extends View {
                                 <h1 class="font-extrabold">Hacker News</h1>
                             </div>
                             <div class="items-center justify-end">
-                                <a href="#/page/${store.currentPage}" class="text-gray-500">
+                                <a href="#/page/{{__currentPage__}}" class="text-gray-500">
                                     <i class="fa fa-times"></i>
                                 </a>
                             </div>
@@ -251,9 +310,9 @@ class NewsDetailView extends View {
                 </div>
 
                 <div class="h-full border rounded-xl bg-white m-6 p-4 ">
-                    <h2>${newsContent.title}</h2>
+                    <h2>{{__title__}}</h2>
                     <div class="text-gray-400 h-20">
-                        ${newsContent.content}
+                        {{__content__}}
                     </div>
 
                     {{__comments__}}
@@ -270,8 +329,8 @@ class NewsDetailView extends View {
         // '#/page/1234' or '#/show/1234'로 출력됨 => '#/page' 제거(substring)
         const id = location.hash.substring(7);
         // url의 마킹 '@id'를 replace() 메서드를 이용해 'id'로 변경
-        const api = new NewsDetailApi();
-        const newsContent = api.getData(id);
+        const api = new NewsDetailApi(CONTENTS_URL.replace('@id', id));
+        const newsDetail: NewsDetail = api.getData();
         // 읽음 표시 
         for (let i = 0; i < store.feeds.length; i++) {
             if (store.feeds[i].id === Number(id)) {
@@ -280,7 +339,10 @@ class NewsDetailView extends View {
             }
         }    
         // 페이지 초기화 & 상세 콘텐츠 출력
-        this.setTemplateData('comments', this.makeComment(newsContent.comments));
+        this.setTemplateData('comments', this.makeComment(newsDetail.comments));
+        this.setTemplateData('currentPage', String(store.currentPage));
+        this.setTemplateData('title', newsDetail.title);
+        this.setTemplateData('content', newsDetail.content);
         this.updateView();
     }
 
@@ -312,24 +374,16 @@ class NewsDetailView extends View {
 /** 함수 */
 // 라우터 함수
 function routerFnc(): void {
-    const routePath = location.hash;
-
-    if (routePath === '') {
-        // 해시 값이 없을 경우 => 목록
-        newsFeedFnc();
-    } else if (routePath.indexOf('#/page/') >= 0) {
-        // 해시 값에 '#/page/'가 0보다 클 때 => 목록 페이지
-        store.currentPage = Number(routePath.substring(7));
-        newsFeedFnc();
-    } else {
-        // 해시 값이 있을 경우 => 콘텐츠
-        newsDetailFnc();
-    }
+    
 }
 
-/** ADD EVENT */
-// hashchange: a.href에 입력한 주소가 바뀔때마다 이벤트 실행
-window.addEventListener('hashchange', routerFnc);
-
 /** 라우터 실행 */
-routerFnc();
+const router: Router = new Router();
+const newsFeedView = new NewsFeedView('root');
+const newsDetailView = new NewsDetailView('root');
+
+router.setDefaultPage(newsFeedView);
+router.addRoutePath('/page/', newsFeedView);
+router.addRoutePath('/show/', newsFeedView);
+
+router.route();
