@@ -220,3 +220,20 @@ class child {
     render();
 }
 ```
+
+#### 9. 전역 스토어
+- 어느 파일에서든 사용할 수 있게 
+```
+const store: Store = {
+    currentPage: 1,
+    feeds: [],
+}
+
+declare global {
+    interface Window {
+        store: Store;
+    }
+}
+
+window.store = store;
+```
