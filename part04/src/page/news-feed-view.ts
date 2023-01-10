@@ -1,6 +1,6 @@
 import View from "../core/view";
 import { NewsFeedApi } from "../core/api";
-import { NewsFeed } from "../types";
+import { NewsStore } from "../types";
 import { NEWS_URL } from "../config";
 
 // 템플릿
@@ -33,30 +33,29 @@ const template: string = `
 export default class NewsFeedView extends View {
     // 선언
     private api: NewsFeedApi;
-    private feeds: NewsFeed[];
+    private store: NewsStore;
 
     // 생성
-    constructor(containerId: string) {
+    constructor(containerId: string, store: NewsStore) {
         super(containerId, template);
+
+        this.store = store;
         this.api = new NewsFeedApi(NEWS_URL);
-        // 뉴스 목록 가져오기
-        this.feeds = window.store.feeds;
     
         // 최소 실행
-        if (this.feeds.length === 0) {
-            this.feeds = window.store.feeds = this.api.getData();
-            this.makeFeeds();
+        if (!this.store.hasFeeds) {
+            this.store.setFeeds(this.api.getData());
         }
     }
 
-    render(): void {
+    render = (): void => {
         // 한 페이지 당 뉴스 목록
         const PAGE_ELS = 10;
         // 마지막 뉴스 목록 페이지 수
-        const lastNewsFeed = this.feeds.length / PAGE_ELS;
-        window.store.currentPage = Number(location.hash.substring(7) || 1);
-        for (let i = (window.store.currentPage - 1) * PAGE_ELS; i < window.store.currentPage * PAGE_ELS; i++) {
-            const { id, title, comments_count, user, points, time_ago, read } = this.feeds[i]
+        const lastNewsFeed = 30 / PAGE_ELS;
+        this.store.currentPage = Number(location.hash.substring(7) || 1);
+        for (let i = (this.store.currentPage - 1) * PAGE_ELS; i < this.store.currentPage * PAGE_ELS; i++) {
+            const { id, title, comments_count, user, points, time_ago, read } = this.store.getFeed(i);
             this.addHTML(`
                 <div class="p-6 ${read ? 'bg-red-500' : 'bg-white'} mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100">
                     <div class="xflex">
@@ -82,17 +81,10 @@ export default class NewsFeedView extends View {
         // 뉴스 콘텐츠
         this.setTemplateData('news_feed', this.getHTML());
         // 이전 페이지
-        this.setTemplateData('prev_page', String(window.store.currentPage > 1 ? window.store.currentPage - 1 : 1));
+        this.setTemplateData('prev_page', String(this.store.currentPage > 1 ? this.store.currentPage - 1 : 1));
         // 다음 페이지
-        this.setTemplateData('next_page', String(window.store.currentPage < lastNewsFeed ? window.store.currentPage + 1 : lastNewsFeed));
+        this.setTemplateData('next_page', String(this.store.currentPage < lastNewsFeed ? this.store.currentPage + 1 : lastNewsFeed));
         // 출력
         this.updateView();
-    }
-
-    // read 데이터 추가
-    private makeFeeds(): void {
-        for (let i = 0; i < this.feeds.length; i++) {
-            this.feeds[i].read = false;
-        }
     }
 }

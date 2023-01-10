@@ -1,6 +1,6 @@
 import View from "../core/view";
 import { NewsDetailApi } from "../core/api";
-import { NewsDetail, NewsComment } from "../types";
+import { NewsComment, NewsStore } from "../types";
 import { CONTENTS_URL } from "../config";
 
 // 템플릿
@@ -35,31 +35,27 @@ const template = `
 
 // 뉴스 콘텐츠 출력 클래스
 export default class NewsDetailView extends View {
-    constructor(containerId: string) {        
+    private store: NewsStore;
+
+    constructor(containerId: string, store: NewsStore) {        
         super(containerId, template);
+        this.store = store;
     }
 
-    render(): void {
-        // 콘텐츠 아이디 추출 
-        // '#/page/1234' or '#/show/1234'로 출력됨 => '#/page' 제거(substring)
-        const id = location.hash.substring(7);
+    render = (id: string): void => {
         // url의 마킹 '@id'를 replace() 메서드를 이용해 'id'로 변경
         const api = new NewsDetailApi(CONTENTS_URL.replace('@id', id));
-        const newsDetail: NewsDetail = api.getData();
-        // 읽음 표시 
-        for (let i = 0; i < window.store.feeds.length; i++) {
-            if (window.store.feeds[i].id === Number(id)) {
-                window.store.feeds[i].read = true;
-                break;
-            }
-        }    
+        const { title, content, comments } = api.getData();
+    
+        this.store.makeRead(Number(id));
         // 페이지 초기화 & 상세 콘텐츠 출력
-        this.setTemplateData('comments', this.makeComment(newsDetail.comments));
-        this.setTemplateData('currentPage', String(window.store.currentPage));
-        this.setTemplateData('title', newsDetail.title);
-        this.setTemplateData('content', newsDetail.content);
+        this.setTemplateData('currentPage', this.store.currentPage.toString());
+        this.setTemplateData('title', title);
+        this.setTemplateData('content', content);
+        this.setTemplateData('comments', this.makeComment(comments));
+    
         this.updateView();
-    }
+      }
 
     // 댓글 출력 함수
     makeComment(comments: NewsComment[]): string {

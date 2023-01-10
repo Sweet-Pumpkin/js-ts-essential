@@ -237,3 +237,14 @@ declare global {
 
 window.store = store;
 ```
+
+#### 10. getter & setter
+```
+    get currentPage() {
+        return this._currentPage;
+    }
+
+    set correntPage(page: number) {
+        this._currentPage = page;
+    }
+```

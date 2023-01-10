@@ -51,5 +51,5 @@ export default abstract class View {
     }
 
     // 추상 메서드 하위 클래스에게 강제 시키기 위해 마킹하는 것
-    abstract render(): void; 
+    abstract render(...params: string[]): void;
 }
